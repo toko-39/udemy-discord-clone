@@ -5,11 +5,24 @@ import SidebarChannel from "./SidebarChannel";
 import MicIcon from "@mui/icons-material/Mic";
 import HeadsetMicIcon from "@mui/icons-material/HeadsetMic";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { auth } from "../../firebase";
+import { auth, db } from "../../firebase";
 import { useAppSelector } from "../../app/hooks";
+import useCollection from "../../hooks/useCollection";
+import { addDoc, collection } from "firebase/firestore";
+// import { collection, query } from "firebase/firestore/lite";
 
 export default function Sidebar() {
-  const user = useAppSelector((state) => state.user);
+  const user = useAppSelector((state) => state.user.user);
+  const { documents: channels } = useCollection("channels");
+
+  const addChannel = async () => {
+    let channelName: string | null = prompt("新しいチャンネルを作成します");
+
+    if (channelName) {
+      await addDoc(collection(db, "channels"), { channelName: channelName });
+    }
+  };
+
   return (
     <div className="sidebar">
       {/*sidebarLeft*/}
@@ -34,20 +47,26 @@ export default function Sidebar() {
               <ExpandMoreIcon />
               <h4>プログラミングチャンネル</h4>
             </div>
-            <AddIcon className="sidebarAddIcon" />
+            <AddIcon className="sidebarAddIcon" onClick={() => addChannel()} />
           </div>
           <div className="sidebarChannelList">
+            {channels.map((channel) => (
+              <SidebarChannel
+                channel={channel}
+                id={channel.id}
+                key={channel.id}
+              />
+            ))}
+            {/* <SidebarChannel />
             <SidebarChannel />
-            <SidebarChannel />
-            <SidebarChannel />
-            <SidebarChannel />
+            <SidebarChannel /> */}
           </div>
           <div className="sidebarFooter">
             <div className="sidebarAccount">
               <img src={user?.photo} alt="" onClick={() => auth.signOut()} />
               <div className="accountName">
                 <h4>{user?.displayName}</h4>
-                <span>{user?.uid.substring(0, 4)}</span>
+                <span>{user?.uid?.substring(0, 4)}</span>
               </div>
             </div>
             <div className="sidebarVoice">
